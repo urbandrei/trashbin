@@ -1,0 +1,234 @@
+<DOCTYPE! html>
+<html>
+<head>
+<style>
+body{
+	background-color:white;
+}
+seg{
+	position:absolute;
+	height:min(8.1vw,8.1vh);
+	width:min(8.1vw,8.1vh);
+	background-color:black;
+	display:inline-block;
+}
+#square{
+	position:relative;
+	height:min(80vw,80vh);
+	width:min(80vw,80vh);
+	margin:auto;
+	border-style: solid;
+	border-width: min(1vw,1vh);
+}
+#gameover{
+	position:absolute;
+	width:min(80vw,80vh);
+	font-size:min(12vw,12vh);
+	text-align:center;
+	bottom:min(40vh,40vw);
+}
+#instructions{
+	position:absolute;
+	width:min(80vw,80vh);
+	font-size:min(5vw,5vh);
+	text-align:center;
+	top:min(40vh,40vw);
+}
+#title{
+	position:relative;
+	height:min(15vw,15vh);
+	width:min(80vw,80vh);
+	margin:auto;
+}
+#name{
+	position:relative;
+	float:left;
+	font-size:min(14vw,14vh);
+	left:0px;
+}
+#score{
+	position:relative;
+	float:right;
+	font-size:min(14vw,14vh);
+	right:0px;
+}
+</style>
+<script>
+window.onload = () => {
+
+deathNoise = document.getElementById("death")
+collectNoise = document.getElementById("collect")
+blip = document.getElementById("blip")
+
+direction = [0,0]
+pressed = false
+snake = []
+document.addEventListener("keydown", (event) => {
+	if(event.key == "w" && (snake.length == 1 || direction[1] != 1)) {
+		direction = [0,-1]
+		pressed = true
+	} else if(event.key == "a" && (snake.length == 1 || direction[0] != 1)) {
+		direction = [-1,0]
+		pressed = true
+	} else if(event.key == "s" && (snake.length == 1 || direction[1] != -1)) {
+		direction = [0,1]
+		pressed = true
+	} else if(event.key == "d" && (snake.length == 1 || direction[0] != -1)) {
+		direction = [1,0]
+		pressed = true
+	}
+})
+
+function addseg(x,y) {
+	seg = document.createElement("seg")
+	seg.style.top = "min("+y*8+"vw,"+y*8+"vh)"
+	seg.style.left = "min("+x*8+"vw,"+x*8+"vh)"
+	document.getElementById("square").appendChild(seg)
+	return seg
+}
+
+function findEmpty() {
+	randx = []
+	randy = []
+	answer = []
+	for(let i = 0;i<10;i++) {
+		randx.push(i)
+		randy.push(i)
+	}
+	randx.sort(() => Math.random() - 0.5)
+	randy.sort(() => Math.random() - 0.5)
+	for(let i = 0;i<10&&answer.length==0;i++) {
+		for(let j = 0;j<10&&answer.length==0;j++) {
+			if(!board[randx[i]][randy[j]]) {
+				answer = [randx[i],randy[j]]
+			}
+		}
+	}
+	return answer
+}
+
+board = []
+for(let i = 0;i<10;i++) {
+	board.push([])
+	for(let j = 0;j<10;j++) {
+		board[i].push(0)
+	}
+}
+
+board[0][9] = 1
+snake = [[0,9,addseg(0,9)]]
+target = findEmpty()
+target.push(addseg(target[0],target[1]))
+target[2].style.backgroundColor="red"
+timer = 0
+score = 0
+state = "game"
+instructions = 0
+interval = 60
+
+setInterval(() => {
+	if(state=="game") {
+		if(direction[0]+direction[1] != 0 &&(pressed|| timer >= interval)) {
+
+		if(instructions == 0) {
+			document.getElementById("gameover").innerHTML = "TO GROW"
+			document.getElementById("instructions").innerHTML = "run into the red squares"
+			instructions++
+		}
+
+		newx = ((snake[0][0] + direction[0])%10+10)%10
+		newy = ((snake[0][1] + direction[1])%10+10)%10
+
+		if(newx == target[0] && newy == target[1]) {	
+			interval = Math.trunc(180/(snake.length+2))
+			collectNoise.currentTime = 0
+			collectNoise.play()
+			score++
+			snake.unshift(target)
+			snake[0][2].style.backgroundColor = "black"
+			board[newx][newy]=1
+			target = findEmpty()
+			target.push(addseg(target[0],target[1]))
+			target[2].style.backgroundColor="red"
+			document.getElementById("score").innerHTML = score
+			if(instructions == 1) {
+				document.getElementById("gameover").innerHTML = "STAY ALIVE"
+				document.getElementById("instructions").innerHTML = "don't run into yourself"
+				instructions++
+			} else {
+				document.getElementById("gameover").innerHTML = ""
+				document.getElementById("instructions").innerHTML = ""			
+			}
+		} else if(board[newx][newy]) {
+			deathNoise.currentTime = 0
+			deathNoise.play()
+			state = "gameover"
+			target[2].remove()
+			target = []
+			timer = 0
+			while(snake.length>0) {
+				snake.pop()[2].remove()
+			}
+			for(let i = 0;i<10;i++) {
+				for(let j = 0;j<10;j++) {
+					board[i][j]=0
+				}
+			}
+			direction = [0,0]
+		}
+		else {
+			blip.currentTime = 0
+			blip.play()
+			temp = snake.pop()
+			snake.unshift([newx,newy,temp[2]])
+			board[newx][newy]=1
+			board[temp[0]][temp[1]] = 0
+			snake[0][2].style.top = "min("+newy*8+"vw,"+newy*8+"vh)"
+			snake[0][2].style.left = "min("+newx*8+"vw,"+newx*8+"vh)"
+		}
+		timer = 0
+		pressed = false
+		
+		} else if (direction[0]+direction[1] == 0) {
+			document.getElementById("gameover").innerHTML = "WELCOME"
+			document.getElementById("instructions").innerHTML = "press WASD keys to move"
+		}
+	}
+	else if(state == "gameover"){
+		document.getElementById("gameover").innerHTML = "GAME OVER"
+		document.getElementById("instructions").innerHTML = "press WASD keys to restart"
+		if(direction[0]+direction[1]!=0 && timer > 90) {
+			document.getElementById("gameover").innerHTML = ""
+			document.getElementById("instructions").innerHTML = ""
+			state = "game"
+			board[0][9] = 1
+			snake = [[0,9,addseg(0,9)]]
+			target = findEmpty()
+			target.push(addseg(target[0],target[1]))
+			target[2].style.backgroundColor="red"
+			timer = 0
+			score = 0
+			document.getElementById("score").innerHTML=score
+			interval =60
+		}
+		timer++
+	}
+	timer++
+}, 1000/60)
+}
+</script>
+</head>
+<body>
+<audio id="collect"><source src="powerUp.wav" type="audio/wav"></audio>
+<audio id="death"><source src="explosion.wav" type="audio/wav"></audio>
+<audio id="blip"><source src="blip.wav" type="audio/wav"></audio>
+<div id="title">
+<div id="name">Snakes</div>
+<div id="score">0</div>
+</div>
+<div id="square">
+<div id="gameover"></div>
+<div id="instructions"></div>
+</div>
+</body>
+</html>

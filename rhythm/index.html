@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+	
+window.onload = (event) => {
+	let scale = Math.trunc(window.innerWidth/192)
+	let fps = 60
+	let keys = []
+		
+	document.addEventListener('keydown', function(event) {
+		if(!keys.includes(event.key)) { keys.push(event.key) }
+	})
+
+	document.addEventListener('keyup', function(event) {  
+ 		i = keys.indexOf(event.key)
+		if(i != -1) { keys.splice(i,1) }
+	})
+
+	let lane1 = document.createElement("div")
+	lane1.style.position = "fixed"
+	lane1.style.height = "100vh"
+	lane1.style.width = 16*scale + "px"
+	lane1.style.left = 4*16*scale + "px"
+	lane1.style.bottom = "0px"
+	lane1.style.backgroundColor = "red"
+	document.body.appendChild(lane1)
+
+	let lane2 = document.createElement("div")
+	lane2.style.position = "fixed"
+	lane2.style.height = "100vh"
+	lane2.style.width = 16*scale + "px"
+	lane2.style.left = 6*16*scale + "px"
+	lane2.style.bottom = "0px"
+	lane2.style.backgroundColor = "blue"
+	document.body.appendChild(lane2)
+
+	let lane3 = document.createElement("div")
+	lane3.style.position = "fixed"
+	lane3.style.height = "100vh"
+	lane3.style.width = 16*scale + "px"
+	lane3.style.left = 8*16*scale + "px"
+	lane3.style.bottom = "0px"
+	lane3.style.backgroundColor = "green"
+	document.body.appendChild(lane3)
+
+	let lane4 = document.createElement("div")
+	lane4.style.position = "fixed"
+	lane4.style.height = "100vh"
+	lane4.style.width = 16*scale + "px"
+	lane4.style.left = 10*16*scale + "px"
+	lane4.style.bottom = "0px"
+	lane4.style.backgroundColor = "yellow"
+	document.body.appendChild(lane4)
+
+	enemies = [[],[],[],[]]
+	notes = [[],[],[],[],[]]
+	timealive = 0
+	score = 0
+	isdead = 0
+
+	bpm = 60
+
+	function update() {
+		if(timealive%(fps/(bpm/60))==0 && !isdead) {
+			let newnote = document.createElement("div")
+			newnote.style.position="fixed"
+			newnote.style.width=scale*16 + "px"
+			newnote.style.height=scale*16+"px"
+			newnote.style.bottom="0px"
+			newnote.style.left=-16*scale+"px"
+			newnote.style.backgroundColor="black"
+			document.body.appendChild(newnote)
+			notes[0].push(newnote)
+		}
+		for(let i = notes[0].length-1; i >= 0;i--) {
+			if(scale*(16*4-8) < parseInt(notes[0][i].style.left.slice(0,-2)) && scale*(16*4+8) > parseInt(notes[0][i].style.left.slice(0,-2))) {
+				if(keys.includes("q")) {
+					notes[0][i].style.left = 4*16*scale + "px"
+					notes[0][i].style.bottom = "0px"
+					notes[1].push(notes[0][i])
+					notes[0].splice(i,1)
+				}
+				else {
+					notes[0][i].style.left = parseInt(notes[0][i].style.left.slice(0,-2)) + 32*bpm/(60*fps)*scale*(1+isdead) + "px"
+				}
+			} else if(scale*(16*6-8) < parseInt(notes[0][i].style.left.slice(0,-2)) && scale*(16*6+8) > parseInt(notes[0][i].style.left.slice(0,-2))) {
+				if(keys.includes("w")) {
+					notes[0][i].style.left = 6*16*scale + "px"
+					notes[0][i].style.bottom = "0px"
+					notes[2].push(notes[0][i])
+					notes[0].splice(i,1)
+				}
+				else {
+					notes[0][i].style.left = parseInt(notes[0][i].style.left.slice(0,-2)) + 32*bpm/(60*fps)*scale*(1+isdead) + "px"
+				}	
+			} else if(scale*(16*8-8) < parseInt(notes[0][i].style.left.slice(0,-2)) && scale*(16*8+8) > parseInt(notes[0][i].style.left.slice(0,-2))) {
+				if(keys.includes("e")) {
+					notes[0][i].style.left = 8*16*scale + "px"
+					notes[0][i].style.bottom = "0px"
+					notes[3].push(notes[0][i])
+					notes[0].splice(i,1)
+				}		
+				else {
+					notes[0][i].style.left = parseInt(notes[0][i].style.left.slice(0,-2)) + 32*bpm/(60*fps)*scale*(1+isdead) + "px"
+				}
+			} else if(scale*(16*10-8) < parseInt(notes[0][i].style.left.slice(0,-2)) && scale*(16*10+8) > parseInt(notes[0][i].style.left.slice(0,-2))) {
+				if(keys.includes("r")) {
+					notes[0][i].style.left = 10*16*scale + "px"
+					notes[0][i].style.bottom = "0px"
+					notes[4].push(notes[0][i])
+					notes[0].splice(i,1)
+				}
+				else {
+					notes[0][i].style.left = parseInt(notes[0][i].style.left.slice(0,-2)) + 32*bpm/(60*fps)*scale*(1+isdead) + "px"
+				}
+			} else if (parseInt(notes[0][i].style.left.slice(0,-2)) > window.innerWidth) {
+				notes[0][i].remove()
+				notes[0].splice(i,1)
+			} else {
+				notes[0][i].style.left = parseInt(notes[0][i].style.left.slice(0,-2)) + 32*bpm/(60*fps)*scale*(1+isdead) + "px"
+			}
+		}
+		for(let i = 0;i<4;i++) {
+			for(let j = notes[i+1].length-1; j >= 0;j--) {
+				if(enemies[i].length > 0 && parseInt(enemies[i][0].style.bottom.slice(0,-2)) -16*scale< parseInt(notes[i+1][j].style.bottom.slice(0,-2))) {
+					enemies[i].shift().remove()
+					notes[i+1][j].remove()
+					notes[i+1].splice(j,1)
+					score++
+					document.getElementById("score").innerHTML = "Score: " + score
+				} else if(parseInt(notes[i+1][j].style.bottom.slice(0,-2)) > window.innerHeight) {
+					notes[i+1][j].remove()
+					notes[i+1].splice(j,1)
+					isdead = 1
+				} else {
+					notes[i+1][j].style.bottom = parseInt(notes[i+1][j].style.bottom.slice(0,-2)) + 32*bpm/(60*fps)*scale*(1+isdead) + "px"
+				}
+				
+			}
+
+		}
+		
+		if(enemies[0].length +enemies[1].length+enemies[2].length+enemies[3].length < timealive/500&& !isdead) {
+			let lane =  Math.trunc(Math.random()*4)
+
+			if(!(notes[lane+1].length > 0 && enemies[lane] == 0)) {
+				let newenemy = document.createElement("div")
+				newenemy.style.position="fixed"
+				newenemy.style.width=16*scale+"px"
+				newenemy.style.height=16*scale+"px"
+				newenemy.style.bottom=window.innerHeight + "px"
+				newenemy.style.left= (4+2*lane)*16*scale + "px"
+				newenemy.style.backgroundColor="black"
+				document.body.appendChild(newenemy)
+				enemies[lane].push(newenemy)
+			}
+		}
+		for(let i = 0; i < 4; i++) {
+			for(let j = 0;j<enemies[i].length;j++) {
+				if(parseInt(enemies[i][j].style.bottom.slice(0,-2)) < 0) {
+					enemies[i][j].remove()
+					enemies[i].splice(j,1)
+					isdead=1
+					document.getElementById("demo").innerHTML = "You died"
+				} else {
+					enemies[i][j].style.bottom = parseInt(enemies[i][j].style.bottom.slice(0,-2)) - 1 -isdead*10 + "px"
+				}
+			}
+		}
+		timealive = timealive + 1
+	}
+	setInterval(update, 1000/fps)
+		
+}
+
+</script>
+</head>
+<body>
+<p id="demo" style="font-size:50px;">Rhythm game jam</p>
+<p id="score" style="font-size:40px;">Score: 0</p>
+</body>
+
+
+</html>

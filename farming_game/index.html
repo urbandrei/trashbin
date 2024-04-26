@@ -1,0 +1,81 @@
+<DOCTYPE! html>
+<html>
+<head>
+<style>
+block {
+width:min(10vh,10vw);
+height:min(10vh,10vw);
+position:fixed;
+}
+</style>
+</head>
+<body>
+</body>
+<script>
+input = []
+document.addEventListener("keydown", (event) => {
+	if(!input.includes(event.key)) {
+		input.push(event.key)
+	}
+})
+document.addEventListener("keyup", (event) => {
+	i = input.indexOf(event.key)
+	if(i != -1) {
+		input.splice(i,1)
+	}
+})
+
+char = document.createElement("block")
+char.style.left="0px"
+char.style.bottom="0px"
+char.style.backgroundColor="black"
+document.body.appendChild(char)
+
+crops = []
+
+function makeCrop() {
+	c = document.createElement("block")
+	l=crops.push([Math.random()*90,Math.random()*90,100,c])
+	c.style.left = "min("+crops[l-1][0]+"vw,"+crops[l-1][0]+"vh)"
+	c.style.bottom = "min("+crops[l-1][1]+"vw,"+crops[l-1][1]+"vh)"
+	c.style.backgroundColor = "RGB(0,255,0)"
+	document.body.appendChild(c)
+}
+
+x=0
+y=0
+setInterval(() => {
+	if(Math.random()<0.01) {
+		makeCrop()
+	}
+	
+	for(let i = crops.length-1; i >= 0;i--) {
+		if(crops[i][0]<x+10&&crops[i][0]>x-10&&crops[i][1]<y+10&&crops[i][1]>y-10) {
+			crops[i][2] = Math.min(crops[i][2]+1,100)
+		} else { crops[i][2]-- }
+		if(crops[i][2] < 0) {
+			crops[i][3].remove()
+			crops.splice(i,1)
+		} else {
+			crops[i][3].style.backgroundColor = "RGB("+255*(100-crops[i][2])/100+","+255*crops[i][2]/100+",0)"
+		}
+	}
+
+	if(input.includes("w")) {
+		y=Math.min(y+1,90)
+	}
+	if(input.includes("a")) {
+		x=Math.max(x-1,0)
+
+	}
+	if(input.includes("s")) {
+		y=Math.max(y-1,0)
+	}
+	if(input.includes("d")) {
+		x=Math.min(x+1,90)
+	}
+	char.style.left="min("+x+"vh,"+x+"vw)"
+	char.style.bottom="min("+y+"vh,"+y+"vw)"
+},1000/60)
+</script>
+</html>
